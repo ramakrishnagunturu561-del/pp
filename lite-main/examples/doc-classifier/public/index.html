@@ -41,6 +41,10 @@
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
             Document Library
           </li>
+          <li class="nav-item" data-target="schedules-view">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            Upcoming Schedules
+          </li>
         </ul>
       </div>
 
@@ -333,6 +337,25 @@
         </div>
       </div>
 
+      <!-- Schedules View -->
+      <div id="schedules-view" class="view-section hidden">
+        <div class="view-header">
+          <div class="header-main">
+            <h1>Upcoming Schedules & Deadlines</h1>
+            <p>Track and manage important dates from your analyzed documents.</p>
+          </div>
+          <div class="header-actions" style="display: flex; gap: 12px;">
+            <button class="btn outline" id="settings-btn" style="display: flex; align-items: center; gap: 8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              Settings
+            </button>
+          </div>
+        </div>
+        <div class="schedules-grid" id="schedules-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 24px;">
+           <!-- JS will populate -->
+        </div>
+      </div>
+
       <!-- ================= DETAILED RESULT VIEW ================= -->
       <div id="result-view" class="view-section hidden">
         <header class="result-header-bar" style="display:flex; align-items:center; gap:16px; margin-bottom: 24px;">
@@ -517,6 +540,25 @@
     </main>
   </div>
 
+  <!-- Settings Modal -->
+  <div class="global-overlay hidden" id="settings-modal">
+    <div class="overlay-box" style="max-width: 500px; padding: 24px; background: white; border-radius: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="color: var(--primary); margin: 0;">Notification Settings</h3>
+        <button class="icon-btn" onclick="document.getElementById('settings-modal').classList.add('hidden')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-light);">&times;</button>
+      </div>
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text-main);">Your Email Address</label>
+        <input type="email" id="user-email-input" placeholder="e.g. yourname@gmail.com" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 1rem;" />
+        <p style="font-size: 0.8rem; color: var(--text-light); margin-top: 8px;">Reminders will be sent to this email when you click "Notify Me" on a document.</p>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 12px;">
+        <button class="btn outline" onclick="document.getElementById('settings-modal').classList.add('hidden')">Cancel</button>
+        <button class="btn btn-primary" id="save-settings-btn">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Navigation logic
     const navItems = document.querySelectorAll('.nav-item');
@@ -558,7 +600,164 @@
     // Middle button in landing page
     document.getElementById('analyze-main-btn').addEventListener('click', () => switchView('analyze-view'));
     
-    // Quick action card in dashboard
+    // Notification Logic
+    let userEmail = localStorage.getItem('userEmail') || '';
+    
+    document.getElementById('save-settings-btn').addEventListener('click', () => {
+      const email = document.getElementById('user-email-input').value;
+      if (!email || !email.includes('@')) {
+        alert('Please enter a valid email address');
+        return;
+      }
+      userEmail = email;
+      localStorage.setItem('userEmail', email);
+      document.getElementById('settings-modal').classList.add('hidden');
+      alert('Settings saved!');
+    });
+
+    document.getElementById('settings-btn').addEventListener('click', () => {
+      document.getElementById('user-email-input').value = userEmail;
+      document.getElementById('settings-modal').classList.remove('hidden');
+    });
+
+    document.getElementById('res-notify-btn')?.addEventListener('click', async () => {
+      if (!userEmail) {
+        alert('Please set your email address in Settings first!');
+        document.getElementById('settings-modal').classList.remove('hidden');
+        return;
+      }
+
+      const activeDoc = docHistory[currentViewIndex];
+      if (!activeDoc) return;
+
+      const btn = document.getElementById('res-notify-btn');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = 'Sending...';
+      btn.disabled = true;
+
+      try {
+        const response = await fetch('/api/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: userEmail,
+            docTitle: activeDoc.title,
+            dueDate: activeDoc.due_date || 'N/A'
+          })
+        });
+
+        if (response.ok) {
+          alert('Notification sent!');
+        } else {
+          alert('Failed to send notification.');
+        }
+      } catch (err) {
+        alert('Error connecting to notification service.');
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    });
+
+    function renderSchedules() {
+      const grid = document.getElementById('schedules-grid');
+      if (!grid) return;
+      
+      const docsWithDeadlines = docHistory.filter(d => d.due_date);
+      
+      if (docsWithDeadlines.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; padding: 60px 40px; text-align: center; background: white; border-radius: 20px; border: 2px dashed var(--border-light); display: flex; flex-direction: column; align-items: center; gap: 20px;">
+            <div style="width: 80px; height: 80px; background: var(--bg-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-light);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width: 40px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+            <div>
+              <h3 style="margin: 0 0 8px 0; color: var(--text-main);">No Upcoming Schedules</h3>
+              <p style="color: var(--text-light); font-size: 1rem; max-width: 400px; margin: 0 auto;">When you analyze documents with deadlines, they will appear here with automated reminders and urgency tracking.</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Sort by date (nearest first)
+      docsWithDeadlines.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+
+      grid.innerHTML = docsWithDeadlines.map((doc, idx) => {
+        const dueDate = new Date(doc.due_date);
+        const now = new Date();
+        now.setHours(0,0,0,0);
+        
+        const diffTime = dueDate - now;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        let status = 'Upcoming';
+        let statusClass = 'badge-low';
+        let accentColor = '#10b981'; // Green
+        
+        if (diffDays < 0) {
+          status = 'Overdue';
+          statusClass = 'badge-high';
+          accentColor = '#ef4444'; // Red
+        } else if (diffDays === 0) {
+          status = 'Due Today';
+          statusClass = 'badge-high'; // Using red or orange
+          accentColor = '#f59e0b'; // Amber
+        } else if (diffDays <= 7) {
+          status = 'Due Soon';
+          statusClass = 'badge-med';
+          accentColor = '#f59e0b';
+        }
+
+        return `
+          <div class="stat-card" style="flex-direction: column; align-items: flex-start; gap: 0; padding: 0; overflow: hidden; position: relative; border-top: 4px solid ${accentColor}; transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 24px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-sm)'">
+            <div style="padding: 24px; width: 100%;">
+              <div style="display: flex; justify-content: space-between; width: 100%; align-items: flex-start; margin-bottom: 20px;">
+                <div style="background: ${accentColor}15; padding: 12px; border-radius: 14px; color: ${accentColor};">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 20px;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                  <span class="lib-badge ${statusClass}" style="margin:0; font-weight: 700; background: ${accentColor}; color: white; border: none; padding: 4px 12px;">${status.toUpperCase()}</span>
+                  ${diffDays >= 0 ? `<span style="font-size: 0.75rem; font-weight: 600; color: ${accentColor};">${diffDays === 0 ? 'Action needed today' : diffDays + ' days remaining'}</span>` : `<span style="font-size: 0.75rem; font-weight: 600; color: #ef4444;">Delayed by ${Math.abs(diffDays)} days</span>`}
+                </div>
+              </div>
+              
+              <h3 style="margin: 0 0 12px 0; font-size: 1.2rem; color: var(--text-main); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${doc.title}</h3>
+              
+              <div style="display: flex; items: center; gap: 8px; margin-bottom: 20px;">
+                 <div style="width: 8px; height: 8px; border-radius: 50%; background: ${accentColor};"></div>
+                 <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px;">${doc.documentType}</span>
+              </div>
+
+              <div style="background: var(--bg-color); border-radius: 12px; padding: 12px 16px; margin-bottom: 24px; border-left: 3px solid ${accentColor};">
+                <span style="display: block; font-size: 0.75rem; color: var(--text-light); margin-bottom: 4px;">DEADLINE</span>
+                <span style="font-size: 1.1rem; font-weight: 700; color: var(--text-main);">${new Date(doc.due_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-light); padding-top: 16px;">
+                 <div style="display: flex; flex-direction: column;">
+                    <span style="font-size: 0.7rem; color: var(--text-light);">PROCESSED ON</span>
+                    <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-main);">${doc.date}</span>
+                 </div>
+                 <button class="btn btn-small outline" onclick="viewDocumentByTitle('${doc.title}')" style="border-radius: 10px; padding: 8px 16px; font-weight: 600;">Open Analysis</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Add renderSchedules call to switchView if target is schedules-view
+    const originalSwitchView = switchView;
+    switchView = function(viewId) {
+      originalSwitchView(viewId);
+      if (viewId === 'schedules-view') renderSchedules();
+    };
+
+    function viewDocumentByTitle(title) {
+      const idx = docHistory.findIndex(d => d.title === title);
+      if (idx !== -1) viewDocument(idx);
+    }
     const quickActionCard = document.querySelector('.quick-actions-panel .drop-trigger');
     if (quickActionCard) {
       quickActionCard.addEventListener('click', () => switchView('analyze-view'));

@@ -896,6 +896,7 @@ body {
   flex: 1;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1774,4 +1775,38 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 25px;
   align-items: start;
+}
+
+/* View Header Styling */
+.view-header {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.header-main h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.header-main p {
+  font-size: 0.95rem;
+  color: var(--text-light);
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.schedules-grid {
+  padding-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
 }

@@ -4,7 +4,11 @@ import fastifyStatic from '@fastify/static';
 import { classifyRoute } from './routes/classify.js';
 import { chatRoute } from './routes/chat.js';
 import * as dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
 import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -24,11 +28,13 @@ server.get('/', (req, reply) => {
 });
 
 import { globalChatRoute } from './routes/globalChat.js';
+import { notifyRoute } from './routes/notify.js';
 
 // Register routes
 server.register(classifyRoute);
 server.register(chatRoute);
 server.register(globalChatRoute);
+server.register(notifyRoute);
 
 const start = async () => {
   try {

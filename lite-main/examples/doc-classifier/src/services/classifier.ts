@@ -41,8 +41,9 @@ export async function processDocument(filePath: string) {
     // 2. Classify with Gemini
     const basePrompt = `You are an expert ${docType} classifier. 
 Classify the provided ${docType} into exactly one of these predefined categories:
-- Identity Proofs (e.g., Aadhaar, PAN, Passport)
-- Financial Documents (e.g., Bank Statements, Invoices, Receipts)
+- Identity Proofs (e.g., Aadhaar, PAN, Passport, Voter ID)
+- Financial Cards & Documents (e.g., Bank Statements, Invoices, Debit/Credit Cards)
+- Government Certificates (e.g., Income Certificate, Caste Certificate, Domicile)
 - Legal Agreements
 - Compliance Documents
 - Tax Documents
@@ -50,6 +51,11 @@ Classify the provided ${docType} into exactly one of these predefined categories
 - Presentations / Pitch Decks
 - Academic / Project Proposals
 - Unknown (if it doesn't fit the above)
+
+SPECIAL INSTRUCTIONS FOR DEADLINES:
+- For Debit/Credit Cards, find the "Expiry Date" or "Valid Thru" and set as "due_date".
+- For Income/Caste Certificates, find the "Validity Period" or "Expiry Date" and set as "due_date".
+- If a document has an expiration or renewal date, ALWAYS extract it.
 
 You must return ONLY a JSON response matching this exact structure:
 {

@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { processDocument } from '../services/classifier.js';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -41,6 +41,7 @@ export async function classifyRoute(fastify: FastifyInstance) {
           if (i > 0) await new Promise(resolve => setTimeout(resolve, 10000));
           
           const fullPath = files[i];
+          if (fullPath === undefined) continue;
           let retryCount = 0;
           const maxRetries = 1;
           
