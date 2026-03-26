@@ -113,10 +113,7 @@ You must return ONLY a JSON response matching this exact structure:
       due_date: classification.due_date || null,
       reminder_days: classification.reminder_days || 7
     };
-  } finally {
-     // Clean up temporary file
-     try {
-         await fs.unlink(filePath);
-     } catch(e) { /* ignore cleanup error */ }
+  } catch (error) {
+    throw error;
   }
 }

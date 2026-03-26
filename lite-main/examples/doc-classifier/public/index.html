@@ -162,7 +162,7 @@
           <div class="panel recent-docs-panel">
             <div class="panel-header">
               <h3>Recent Documents</h3>
-              <button class="btn btn-small outline">View All</button>
+              <button class="btn btn-small outline" onclick="switchView('library-view')">View All</button>
             </div>
             <div class="doc-list" id="dashboard-recent-docs">
               <!-- Real documents will be injected here -->
@@ -267,6 +267,7 @@
           <div class="filter-actions-group">
             <button class="filter-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg> All Status <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
             <button class="filter-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> All Risk <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+            <button class="btn btn-small outline" style="border-color: #ff4d4d; color: #ff4d4d;" onclick="clearHistory()">Clear History</button>
           </div>
         </div>
 
@@ -444,7 +445,30 @@
       </div>
 
       <!-- Generic hidden file input used anywhere -->
-      <input type="file" id="fileNode" hidden accept="application/pdf,image/*,text/plain" />
+      <input type="file" id="fileNode" hidden accept="application/pdf,image/*,text/plain,.zip" multiple />
+      
+      <!-- Batch Results Overlay -->
+      <div class="global-overlay hidden" id="batch-results-modal">
+        <div class="result-card" style="max-width: 800px; width: 90%;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--bg-color); padding-bottom: 15px;">
+            <h3 style="color: var(--primary); font-size: 1.4rem;">📊 Batch Processing Summary</h3>
+            <button class="icon-btn" onclick="document.getElementById('batch-results-modal').classList.add('hidden')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+          </div>
+          <p id="batch-stats-text" style="margin-bottom: 20px; font-weight: 500; color: var(--text-light); text-align: left;"></p>
+          <div id="batch-items-list" style="display: flex; flex-direction: column; gap: 12px; max-height: 50vh; overflow-y: auto; padding-right: 8px;">
+            <!-- Items added dynamically -->
+          </div>
+          <div style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 12px; align-items: center;">
+            <button id="batch-listen-btn" class="btn outline" style="display: flex; align-items: center; gap: 8px;">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+               Listen to Summary
+            </button>
+            <div style="flex-grow: 1;"></div>
+            <button class="btn outline" onclick="document.getElementById('batch-results-modal').classList.add('hidden'); switchView('library-view');">Go to Library</button>
+            <button class="btn btn-primary" onclick="document.getElementById('batch-results-modal').classList.add('hidden')">Done</button>
+          </div>
+        </div>
+      </div>
       
       <!-- Share Modal -->
       <div class="global-overlay hidden" id="share-modal">
@@ -499,13 +523,23 @@
     const views = document.querySelectorAll('.view-section');
     const backBtn = document.getElementById('back-to-dashboard');
     
-    function switchView(targetId) {
-      if(!targetId) return;
+    function clearHistory() {
+      if (confirm('Are you sure you want to clear all document history? This cannot be undone.')) {
+        docHistory = [];
+        localStorage.removeItem('docHistory');
+        renderLibrary();
+        updateDashboard();
+        switchView('dashboard-view');
+      }
+    }
+    
+    function switchView(viewId) {
+      if(!viewId) return;
       views.forEach(v => v.classList.add('hidden'));
-      document.getElementById(targetId).classList.remove('hidden');
+      document.getElementById(viewId).classList.remove('hidden');
       
       navItems.forEach(item => {
-        if(item.dataset.target === targetId) item.classList.add('active');
+        if(item.dataset.target === viewId) item.classList.add('active');
         else item.classList.remove('active');
       });
     }
@@ -545,12 +579,12 @@
       t.addEventListener('drop', (e) => {
         e.preventDefault();
         t.classList.remove('drag-hover');
-        if (e.dataTransfer.files.length) handleUpload(e.dataTransfer.files[0]);
+        if (e.dataTransfer.files.length) handleBulkUpload(e.dataTransfer.files);
       });
     });
 
     fileNode.addEventListener('change', (e) => {
-      if (e.target.files.length) handleUpload(e.target.files[0]);
+      if (e.target.files.length) handleBulkUpload(e.target.files);
     });
 
 
@@ -580,46 +614,55 @@
         if (emptyState) emptyState.classList.remove('hidden');
       } else {
         if (emptyState) emptyState.classList.add('hidden');
+        
+        // Group by category
+        const groups = {};
         docHistory.forEach((doc, idx) => {
-          let riskLevel = 'LOW RISK';
-          let riskClass = 'badge-low';
-          let riskPercent = Math.floor(Math.random() * 20); 
-  
-          if (doc.risks && doc.risks.length > 2) { riskLevel = 'HIGH RISK'; riskClass = 'badge-high'; riskPercent = 70 + Math.floor(Math.random() * 20); }
-          else if (doc.risks && doc.risks.length > 0) { riskLevel = 'MEDIUM RISK'; riskClass = 'badge-med'; riskPercent = 30 + Math.floor(Math.random() * 30); }
-          
-          const shortTitle = doc.title.length > 25 ? doc.title.substring(0, 25) + '...' : doc.title;
-          const shortSumm = doc.summary ? doc.summary.substring(0, 120) + '...' : 'No summary available.';
+           const cat = doc.documentType || 'Unknown';
+           if (!groups[cat]) groups[cat] = [];
+           groups[cat].push({ doc, idx });
+        });
 
-          const card = document.createElement('div');
-          card.className = 'lib-card';
-          card.innerHTML = `
-            <div class="lib-card-header">
-              <h4 title="${doc.title}">${shortTitle}</h4>
-              <span class="lib-badge ${riskClass}">${riskLevel}</span>
-            </div>
-            <div class="lib-status green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Completed</div>
-            <p class="lib-summary">${shortSumm}</p>
+        // Alphabetical sort of categories
+        Object.keys(groups).sort().forEach(category => {
+          const folderHeader = document.createElement('div');
+          folderHeader.className = 'folder-header';
+          folderHeader.style.cssText = "grid-column: 1 / -1; margin: 24px 0 12px; display: flex; align-items: center; gap: 10px; color: var(--text-main); font-weight: 700; font-size: 1.1rem; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;";
+          folderHeader.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px; color:var(--primary);"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> 📁 ${category} (${groups[category].length})`;
+          libGrid.appendChild(folderHeader);
+
+          groups[category].forEach(({ doc, idx }) => {
+            let riskLevel = 'LOW RISK';
+            let riskClass = 'badge-low';
+            let riskPercent = Math.floor(Math.random() * 20); 
+    
+            if (doc.risks && doc.risks.length > 2) { riskLevel = 'HIGH RISK'; riskClass = 'badge-high'; riskPercent = 70 + Math.floor(Math.random() * 20); }
+            else if (doc.risks && doc.risks.length > 0) { riskLevel = 'MEDIUM RISK'; riskClass = 'badge-med'; riskPercent = 30 + Math.floor(Math.random() * 30); }
             
-            
-            <div class="lib-meta">
-              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> ${doc.date}</span>
-              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> ${riskPercent}% risk</span>
-              ${doc.due_date && doc.due_date !== 'null' ? '<span style="color:#e69b00; font-weight:600;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20m-7-7l7 7 7-7"/></svg> Due: ' + doc.due_date + '</span>' : ''}
-            </div>
-            
-            <div class="lib-tags">
-              <span class="tag tag-red">risk</span>
-              <span class="tag tag-green">legal</span>
-              <span class="tag tag-blue">insights</span>
-            </div>
-            
-            <div class="lib-actions">
-              <button class="lib-btn-view" onclick="viewDocument(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> View Results</button>
-              <button class="lib-btn-download" onclick="downloadDocumentIdx(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></button>
-            </div>
-          `;
-          libGrid.appendChild(card);
+            const shortTitle = doc.title.length > 25 ? doc.title.substring(0, 25) + '...' : doc.title;
+            const shortSumm = doc.summary ? doc.summary.substring(0, 120) + '...' : 'No summary available.';
+
+            const card = document.createElement('div');
+            card.className = 'lib-card';
+            card.innerHTML = `
+              <div class="lib-card-header">
+                <h4 title="${doc.title}">${shortTitle}</h4>
+                <span class="lib-badge ${riskClass}">${riskLevel}</span>
+              </div>
+              <div class="lib-status green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Completed</div>
+              <p class="lib-summary">${shortSumm}</p>
+              <div class="lib-meta">
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> ${doc.date}</span>
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> ${riskPercent}% risk</span>
+                ${doc.due_date && doc.due_date !== 'null' ? '<span style="color:#e69b00; font-weight:600;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20m-7-7l7 7 7-7"/></svg> Due: ' + doc.due_date + '</span>' : ''}
+              </div>
+              <div class="lib-actions">
+                <button class="lib-btn-view" onclick="viewDocument(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> View Results</button>
+                <button class="lib-btn-download" onclick="downloadDocumentIdx(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></button>
+              </div>
+            `;
+            libGrid.appendChild(card);
+          });
         });
       }
       updateDashboardStats();
@@ -666,8 +709,10 @@
       
       let totalTime = 0;
       docHistory.forEach(d => {
-        const t = parseFloat(d.processingTime.replace(' sec', ''));
-        if (!isNaN(t)) totalTime += t;
+        if (d.processingTime && typeof d.processingTime === 'string') {
+          const t = parseFloat(d.processingTime.replace(' sec', ''));
+          if (!isNaN(t)) totalTime += t;
+        }
       });
       const avgTime = total > 0 ? (totalTime / total).toFixed(1) : 0;
 
@@ -705,6 +750,7 @@
             <div class="doc-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg></div>
             <div class="doc-item-details">
               <h4>${doc.title} <svg class="verified-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></h4>
+              <p style="font-size: 0.8rem; color: var(--text-light); margin: 4px 0; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">${doc.summary || 'Analysis complete'}</p>
               <div class="doc-meta">
                 <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> ${doc.date}</span>
                 <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> ${rVal}% risk</span>
@@ -897,6 +943,49 @@
     let isSpeaking = false;
     let speechUtterance = null;
 
+    function toggleBatchSpeech() {
+      const listenBtn = document.getElementById('batch-listen-btn');
+      if (!listenBtn || !lastBatchResults || lastBatchResults.length === 0) return;
+
+      if (isSpeaking) {
+        window.speechSynthesis.cancel();
+        stopBatchSpeechUI();
+        return;
+      }
+
+      const total = lastBatchResults.length;
+      const categories = {};
+      lastBatchResults.forEach(r => {
+        const cat = r.documentType || 'Unknown';
+        categories[cat] = (categories[cat] || 0) + 1;
+      });
+
+      const catSummary = Object.entries(categories)
+        .map(([cat, count]) => `${count} ${cat}`)
+        .join(', ');
+
+      const textToRead = `Batch processing complete. I have successfully analyzed ${total} documents. The batch includes ${catSummary}. All files have been organized into their respective folders.`;
+
+      speechUtterance = new SpeechSynthesisUtterance(textToRead);
+      speechUtterance.onstart = () => {
+        isSpeaking = true;
+        listenBtn.classList.add('speaking');
+        listenBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;"><rect x="6" y="6" width="12" height="12"></rect></svg> Stop Listening`;
+      };
+      speechUtterance.onend = stopBatchSpeechUI;
+      speechUtterance.onerror = stopBatchSpeechUI;
+
+      window.speechSynthesis.speak(speechUtterance);
+    }
+
+    function stopBatchSpeechUI() {
+      const listenBtn = document.getElementById('batch-listen-btn');
+      if (!listenBtn) return;
+      isSpeaking = false;
+      listenBtn.classList.remove('speaking');
+      listenBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg> Listen to Summary`;
+    }
+
     function toggleSpeech() {
       const listenBtn = document.getElementById('res-listen-btn');
       if (!listenBtn) return;
@@ -945,6 +1034,9 @@
       if (e.target.id === 'res-listen-btn' || e.target.closest('#res-listen-btn')) {
         toggleSpeech();
       }
+      if (e.target.id === 'batch-listen-btn' || e.target.closest('#batch-listen-btn')) {
+        toggleBatchSpeech();
+      }
     });
 
     // Initial load
@@ -952,11 +1044,88 @@
 
     let progressInterval = null;
 
-    async function handleUpload(file) {
+    async function handleBulkUpload(files) {
+      if (!files || files.length === 0) return;
+      const fileList = Array.from(files);
       const loading = document.getElementById('loading');
-      
-      document.getElementById('pm-filename').innerText = file.name;
       loading.classList.remove('hidden');
+      
+      const originalTitle = document.getElementById('pm-title').innerText;
+      const originalSubtitle = document.getElementById('pm-subtitle').innerText;
+
+      const batchResults = [];
+
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
+        const statusPrefix = fileList.length > 1 ? `(${i + 1}/${fileList.length}) ` : '';
+        
+        // Update PM text to show progress
+        document.getElementById('pm-title').innerText = statusPrefix + 'Analyzing Document';
+        document.getElementById('pm-subtitle').innerText = file.name;
+        
+        const res = await handleSingleUpload(file);
+        if (res) {
+          if (Array.isArray(res)) batchResults.push(...res);
+          else batchResults.push(res);
+        }
+      }
+      
+      // Cleanup UI
+      document.getElementById('pm-title').innerText = originalTitle;
+      document.getElementById('pm-subtitle').innerText = originalSubtitle;
+      loading.classList.add('hidden');
+
+      // Show Batch Summary if more than 1 document was processed
+      if (batchResults.length > 1) {
+        showBatchSummary(batchResults);
+      } else if (batchResults.length === 1) {
+        // If it was a single file, jump straight to its summary report
+        viewDocument(0);
+      }
+    }
+
+    let lastBatchResults = [];
+
+    function showBatchSummary(results) {
+      lastBatchResults = results;
+      const modal = document.getElementById('batch-results-modal');
+      const stats = document.getElementById('batch-stats-text');
+      const list = document.getElementById('batch-items-list');
+      
+      stats.innerText = `Successfully processed ${results.length} documents. Each has been categorized and stored in its respective folder.`;
+      list.innerHTML = '';
+      
+      results.forEach((res, index) => {
+        const item = document.createElement('div');
+        item.style.cssText = "background: #f8fafd; border-radius: 12px; padding: 16px; border: 1px solid var(--border-light); display: flex; gap: 16px; align-items: flex-start; text-align: left;";
+        
+        const riskLevel = (res.risks && res.risks.length > 2) ? 'High' : (res.risks && res.risks.length > 0) ? 'Med' : 'Low';
+        const riskClass = riskLevel === 'High' ? 'badge-high' : riskLevel === 'Med' ? 'badge-med' : 'badge-low';
+
+        item.innerHTML = `
+          <div style="width: 40px; height: 40px; background: white; border-radius: 8px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          </div>
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <h5 style="font-weight: 700; color: var(--text-main); font-size: 0.95rem;">${res.filename || 'Document'}</h5>
+              <span class="lib-badge ${riskClass}" style="font-size: 0.65rem; padding: 2px 8px;">${riskLevel} Risk</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: var(--primary); font-weight: 600; margin-bottom: 6px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              ${res.documentType || 'Uncategorized'}
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-light); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${res.summary || 'Analysis completed successfully.'}</p>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+      
+      modal.classList.remove('hidden');
+    }
+
+    async function handleSingleUpload(file) {
+      document.getElementById('pm-filename').innerText = file.name;
       
       const pmFill = document.getElementById('pm-fill');
       const pmPercent = document.getElementById('pm-percent');
@@ -973,9 +1142,6 @@
       document.getElementById('spinner-2').classList.add('hidden');
       document.getElementById('spinner-3').classList.add('hidden');
       
-      document.getElementById('pm-title').innerText = 'Extracting Text';
-      document.getElementById('pm-subtitle').innerText = 'Reading document content...';
-
       if (progressInterval) clearInterval(progressInterval);
       
       progressInterval = setInterval(() => {
@@ -987,9 +1153,6 @@
            
            document.getElementById('spinner-1').classList.add('hidden');
            document.getElementById('spinner-2').classList.remove('hidden');
-           
-           document.getElementById('pm-title').innerText = 'AI Analysis';
-           document.getElementById('pm-subtitle').innerText = 'Analyzing legal content and risks...';
            
            p += Math.random() * 2;
         }
@@ -1021,38 +1184,39 @@
           document.getElementById('spinner-2').classList.add('hidden');
           document.getElementById('spinner-3').classList.remove('hidden');
           
-          document.getElementById('pm-title').innerText = 'Analysis Complete';
-          document.getElementById('pm-subtitle').innerText = 'Ready for review!';
+          const processResults = Array.isArray(data) ? data : [data];
           
-          setTimeout(() => {
+          processResults.forEach(res => {
             const docEntry = {
-              id: Date.now(),
-              title: file.name,
-              documentType: data.documentType,
-              confidenceScore: data.confidenceScore,
-              processingTime: data.processingTime,
-              summary: data.summary,
-              clauses: data.clauses,
-              risks: data.risks,
-              due_date: data.due_date,
-              reminder_days: data.reminder_days,
+              id: Date.now() + Math.random(),
+              title: res.filename || file.name,
+              documentType: res.documentType,
+              confidenceScore: res.confidenceScore,
+              processingTime: res.processingTime,
+              summary: res.summary,
+              clauses: res.clauses,
+              risks: res.risks,
+              due_date: res.due_date,
+              reminder_days: res.reminder_days,
               date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
             };
             docHistory.unshift(docEntry);
-            localStorage.setItem('docHistory', JSON.stringify(docHistory));
-            renderLibrary();
-  
-            viewDocument(0);
-          }, 800);
+          });
+          
+          localStorage.setItem('docHistory', JSON.stringify(docHistory));
+          renderLibrary();
+          return data;
         } else {
           clearInterval(progressInterval);
+          console.error("Classification Error Details:", data);
           alert('Error: ' + (data.details || data.error));
-          loading.classList.add('hidden');
+          return null; // Return null to indicate error but allow loop to continue or exit
         }
       } catch (err) {
         clearInterval(progressInterval);
+        console.error("Connection/Upload Error:", err);
         alert('Upload failed. Is the server running?');
-        loading.classList.add('hidden');
+        return null;
       }
     }
 

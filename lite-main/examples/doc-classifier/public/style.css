@@ -1742,3 +1742,36 @@ body {
 .deadline-safe { background: rgba(5, 205, 153, 0.1); color: var(--accent-green); }
 .deadline-expiring { background: rgba(255, 181, 71, 0.1); color: #e69b00; }
 .deadline-expired { background: rgba(238, 93, 80, 0.1); color: var(--accent-red); }
+
+/* Folder Headers in Library */
+.folder-header {
+  grid-column: 1 / -1;
+  margin: 30px 0 15px;
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 1.15rem;
+  border-bottom: 2px solid var(--border-light);
+  padding-bottom: 10px;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(4px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.folder-header svg {
+  width: 24px;
+  height: 24px;
+  color: var(--primary);
+  filter: drop-shadow(0 2px 4px rgba(74, 114, 255, 0.2));
+}
+
+.lib-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
+  align-items: start;
+}

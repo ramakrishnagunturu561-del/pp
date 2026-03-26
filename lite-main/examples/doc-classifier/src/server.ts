@@ -34,6 +34,7 @@ const start = async () => {
   try {
     await server.listen({ port: 3000 });
     console.log('Server running at http://localhost:3000');
+    console.log('Current Working Directory:', process.cwd());
   } catch (err) {
     server.log.error(err);
     process.exit(1);

@@ -18,10 +18,12 @@
     "@fastify/multipart": "^9.4.0",
     "@fastify/static": "^9.0.0",
     "@google/generative-ai": "^0.24.1",
+    "adm-zip": "^0.5.16",
     "dotenv": "^17.3.1",
     "fastify": "^5.8.2"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.8",
     "@types/node": "^25.5.0",
     "pdfkit": "^0.18.0",
     "tsx": "^4.21.0",
