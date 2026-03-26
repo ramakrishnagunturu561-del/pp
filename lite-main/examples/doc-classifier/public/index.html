@@ -194,7 +194,7 @@
             
           <!-- Deadline Reminders Widget -->
           <div class="panel reminder-widget" id="dashboard-reminders">
-            <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Upcoming Deadlines</h4>
+            <h4>Upcoming Deadlines</h4>
             <div id="reminder-list">
               <!-- Reminders injected via JS -->
                <div style="font-size:0.85rem; color:var(--text-light); text-align:center; padding: 10px 0;">No deadlines found</div>
@@ -269,8 +269,24 @@
             <input type="text" placeholder="Search documents..." id="lib-search" />
           </div>
           <div class="filter-actions-group">
-            <button class="filter-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg> All Status <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
-            <button class="filter-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> All Risk <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+            <div class="filter-select-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+              <select id="lib-status-filter" class="filter-select">
+                <option value="all">All Status</option>
+                <option value="upcoming">Has Deadline</option>
+                <option value="expired">Expired</option>
+                <option value="none">No Deadline</option>
+              </select>
+            </div>
+            <div class="filter-select-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              <select id="lib-risk-filter" class="filter-select">
+                <option value="all">All Risk</option>
+                <option value="low">Low Risk</option>
+                <option value="medium">Medium Risk</option>
+                <option value="high">High Risk</option>
+              </select>
+            </div>
             <button class="btn btn-small outline" style="border-color: #ff4d4d; color: #ff4d4d;" onclick="clearHistory()">Clear History</button>
           </div>
         </div>
@@ -667,14 +683,18 @@
       
       if (docsWithDeadlines.length === 0) {
         grid.innerHTML = `
-          <div style="grid-column: 1/-1; padding: 60px 40px; text-align: center; background: white; border-radius: 20px; border: 2px dashed var(--border-light); display: flex; flex-direction: column; align-items: center; gap: 20px;">
-            <div style="width: 80px; height: 80px; background: var(--bg-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-light);">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width: 40px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <div style="grid-column: 1/-1; padding: 60px 40px; text-align: center; background: white; border-radius: 20px; border: 1px solid var(--border-light); display: flex; flex-direction: column; align-items: center; gap: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-top: 10px; animation: fadeIn 0.4s ease-out;">
+            <div style="width: 56px; height: 56px; background: rgba(74, 114, 255, 0.08); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: var(--primary); margin-bottom: 4px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 26px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             </div>
             <div>
-              <h3 style="margin: 0 0 8px 0; color: var(--text-main);">No Upcoming Schedules</h3>
-              <p style="color: var(--text-light); font-size: 1rem; max-width: 400px; margin: 0 auto;">When you analyze documents with deadlines, they will appear here with automated reminders and urgency tracking.</p>
+              <h3 style="margin: 0 0 6px 0; color: var(--text-main); font-size: 1.25rem; font-weight: 700;">No Deadlines Found</h3>
+              <p style="color: var(--text-light); font-size: 0.95rem; max-width: 380px; margin: 0 auto; line-height: 1.5;">When you analyze documents with due dates, they will appear here with automated reminders and urgency tracking.</p>
             </div>
+            <button class="btn btn-primary" onclick="switchView('analyze-view')" style="padding: 10px 24px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+               Extract First Deadline
+            </button>
           </div>
         `;
         return;
@@ -739,7 +759,13 @@
                     <span style="font-size: 0.7rem; color: var(--text-light);">PROCESSED ON</span>
                     <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-main);">${doc.date}</span>
                  </div>
-                 <button class="btn btn-small outline" onclick="viewDocumentByTitle('${doc.title}')" style="border-radius: 10px; padding: 8px 16px; font-weight: 600;">Open Analysis</button>
+                 <div style="display: flex; gap: 8px; align-items: center;">
+                   <a href="${buildGCalURL(doc.title, doc.due_date, doc.summary)}" target="_blank" class="gcal-btn" title="Add to Google Calendar">
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                     Google Calendar
+                   </a>
+                   <button class="btn btn-small outline" onclick="viewDocumentByTitle('${doc.title}')" style="border-radius: 10px; padding: 8px 16px; font-weight: 600;">Open Analysis</button>
+                 </div>
               </div>
             </div>
           </div>
@@ -803,23 +829,95 @@
         "RISKS & RED FLAGS:\n" + risksStr + "\n";
     };
 
-    function renderLibrary() {
+    // Google Calendar URL builder
+    function buildGCalURL(title, dueDate, description) {
+      const date = new Date(dueDate);
+      const pad = n => String(n).padStart(2, '0');
+      const dateStr = `${date.getFullYear()}${pad(date.getMonth()+1)}${pad(date.getDate())}`;
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const nextStr = `${nextDay.getFullYear()}${pad(nextDay.getMonth()+1)}${pad(nextDay.getDate())}`;
+      const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: `Deadline: ${title}`,
+        dates: `${dateStr}/${nextStr}`,
+        details: description || `Document deadline set via Aurora.ai. Title: ${title}`,
+        sf: 'true'
+      });
+      return `https://calendar.google.com/calendar/render?${params.toString()}`;
+    }
+
+
+    function renderLibrary(searchTerm = '', statusFilter = 'all', riskFilter = 'all') {
       const libGrid = document.getElementById('lib-grid');
       const emptyState = document.getElementById('empty-state');
       if (!libGrid) return;
+
+      // Read current filter values from dropdowns if not passed
+      if (!searchTerm) searchTerm = document.getElementById('lib-search')?.value || '';
+      if (statusFilter === 'all') statusFilter = document.getElementById('lib-status-filter')?.value || 'all';
+      if (riskFilter === 'all') riskFilter = document.getElementById('lib-risk-filter')?.value || 'all';
+      
+      let filteredDocs = docHistory;
+
+      // Text search filter
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        filteredDocs = filteredDocs.filter(d => {
+          const searchable = [
+            d.title,
+            d.summary,
+            d.documentType,
+            ...(d.clauses || []),
+            ...(d.risks || [])
+          ].join(' ').toLowerCase();
+          return searchable.includes(term);
+        });
+      }
+
+      // Status filter
+      if (statusFilter !== 'all') {
+        filteredDocs = filteredDocs.filter(d => {
+          const hasDue = d.due_date && d.due_date !== 'null';
+          if (statusFilter === 'none') return !hasDue;
+          if (statusFilter === 'upcoming') return hasDue;
+          if (statusFilter === 'expired') {
+            if (!hasDue) return false;
+            return new Date(d.due_date) < new Date();
+          }
+          return true;
+        });
+      }
+
+      // Risk filter
+      if (riskFilter !== 'all') {
+        filteredDocs = filteredDocs.filter(d => {
+          const riskCount = (d.risks || []).length;
+          if (riskFilter === 'high') return riskCount > 2;
+          if (riskFilter === 'medium') return riskCount > 0 && riskCount <= 2;
+          if (riskFilter === 'low') return riskCount === 0;
+          return true;
+        });
+      }
+
       libGrid.innerHTML = '';
       
-      if (docHistory.length === 0) {
+      if (filteredDocs.length === 0) {
         if (emptyState) emptyState.classList.remove('hidden');
+        if (searchTerm) {
+           libGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-light);">No documents matched "${searchTerm}"</div>`;
+        }
       } else {
         if (emptyState) emptyState.classList.add('hidden');
         
         // Group by category
         const groups = {};
-        docHistory.forEach((doc, idx) => {
+        filteredDocs.forEach((doc, originalIdx) => {
+           // We need to find the REAL index in docHistory for viewDocument calls
+           const realIdx = docHistory.findIndex(h => h.id === doc.id);
            const cat = doc.documentType || 'Unknown';
            if (!groups[cat]) groups[cat] = [];
-           groups[cat].push({ doc, idx });
+           groups[cat].push({ doc, idx: realIdx });
         });
 
         // Alphabetical sort of categories
@@ -858,6 +956,7 @@
               <div class="lib-actions">
                 <button class="lib-btn-view" onclick="viewDocument(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> View Results</button>
                 <button class="lib-btn-download" onclick="downloadDocumentIdx(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></button>
+                ${doc.due_date && doc.due_date !== 'null' ? `<a href="${buildGCalURL(doc.title, doc.due_date, doc.summary)}" target="_blank" class="lib-btn-gcal" title="Add to Google Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></a>` : ''}
               </div>
             `;
             libGrid.appendChild(card);
@@ -1420,6 +1519,13 @@
     }
 
 
+
+    // Search Input
+    document.getElementById('lib-search').addEventListener('input', () => renderLibrary());
+
+    // Status & Risk filter dropdowns
+    document.getElementById('lib-status-filter').addEventListener('change', () => renderLibrary());
+    document.getElementById('lib-risk-filter').addEventListener('change', () => renderLibrary());
 
     // --- Global Chat Logic ---
     function toggleGlobalChat() {

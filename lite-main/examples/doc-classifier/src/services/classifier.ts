@@ -41,8 +41,8 @@ export async function processDocument(filePath: string) {
     // 2. Classify with Gemini
     const basePrompt = `You are an expert ${docType} classifier. 
 Classify the provided ${docType} into exactly one of these predefined categories:
-- Identity Proofs (e.g., Aadhaar, PAN, Passport, Voter ID)
-- Financial Cards & Documents (e.g., Bank Statements, Invoices, Debit/Credit Cards)
+- Identity Proofs (e.g., Aadhaar, PAN, Driving Licence, Passport)
+- Financial Documents (e.g., Bank Statements, Invoices, Receipts, Debit/Credit Cards)
 - Government Certificates (e.g., Income Certificate, Caste Certificate, Domicile)
 - Legal Agreements
 - Compliance Documents
