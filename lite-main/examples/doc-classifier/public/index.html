@@ -8,6 +8,45 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
+  <!-- Auth View (Hidden by default or shown if not logged in) -->
+  <div id="auth-view" class="hidden-auth">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo">
+          <svg viewBox="0 0 24 24" fill="none" class="sparkle-icon" style="width: 28px; height: 28px;">
+            <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" fill="var(--primary)"/>
+          </svg>
+        </div>
+        <h2>Aurora.ai</h2>
+        <p id="auth-subtitle">Welcome back! Please login to your account.</p>
+      </div>
+
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-login" onclick="toggleAuthMode('login')">Login</div>
+        <div class="auth-tab" id="tab-signup" onclick="toggleAuthMode('signup')">Sign Up</div>
+      </div>
+
+      <div class="auth-form">
+        <div class="auth-input-group hidden-auth" id="group-name">
+          <label>Full Name</label>
+          <input type="text" id="auth-name" placeholder="Enter your name" />
+        </div>
+        <div class="auth-input-group">
+          <label>Email Address</label>
+          <input type="email" id="auth-email" placeholder="name@example.com" />
+        </div>
+        <div class="auth-input-group">
+          <label>Password</label>
+          <input type="password" id="auth-pass" placeholder="••••••••" />
+        </div>
+        <button class="btn btn-auth" id="btn-auth-submit" onclick="handleAuthSubmit()">Login</button>
+      </div>
+
+      <div class="auth-footer">
+        <p id="auth-footer-text">Secure access to your legal intelligence</p>
+      </div>
+    </div>
+  </div>
   
   <div class="app-layout">
     <!-- Sidebar -->
@@ -69,13 +108,17 @@
       </div>
 
       <div class="sidebar-footer">
-        <div class="assistant-card">
+        <div class="assistant-card" style="margin-bottom: 12px;">
           <div class="assistant-avatar">AI</div>
           <div class="assistant-info">
-            <h5>Legal AI Assistant</h5>
+            <h5 id="user-display-name">Legal AI Assistant</h5>
             <span>Ready to analyze documents</span>
           </div>
         </div>
+        <button class="btn outline" style="width: 100%; border-color: rgba(238, 93, 80, 0.3); color: var(--accent-red); padding: 10px;" onclick="logout()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; margin-right: 8px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          Logout
+        </button>
       </div>
     </aside>
 
@@ -576,6 +619,115 @@
   </div>
 
   <script>
+    // Auth State
+    let authMode = 'login';
+    let currentUser = null;
+
+    function checkSession() {
+      const session = localStorage.getItem('aurora_session');
+      if (session) {
+        currentUser = JSON.parse(session);
+        document.getElementById('auth-view').classList.add('hidden-auth');
+        document.getElementById('user-display-name').textContent = currentUser.name || 'User';
+        
+        // Load user-specific document history
+        const userDocKey = `docHistory_${currentUser.email}`;
+        docHistory = JSON.parse(localStorage.getItem(userDocKey)) || [];
+
+        renderLibrary();
+        updateDashboard();
+      } else {
+        document.getElementById('auth-view').classList.remove('hidden-auth');
+      }
+    }
+
+    function toggleAuthMode(mode) {
+      authMode = mode;
+      const tabLogin = document.getElementById('tab-login');
+      const tabSignup = document.getElementById('tab-signup');
+      const groupName = document.getElementById('group-name');
+      const btnSubmit = document.getElementById('btn-auth-submit');
+      const subtitle = document.getElementById('auth-subtitle');
+
+      if (mode === 'signup') {
+        tabSignup.classList.add('active');
+        tabLogin.classList.remove('active');
+        groupName.classList.remove('hidden-auth');
+        btnSubmit.textContent = 'Create Account';
+        subtitle.textContent = 'Join Aurora.ai to manage your legal docs.';
+      } else {
+        tabLogin.classList.add('active');
+        tabSignup.classList.remove('active');
+        groupName.classList.add('hidden-auth');
+        btnSubmit.textContent = 'Login';
+        subtitle.textContent = 'Welcome back! Please login to your account.';
+      }
+    }
+
+    function handleAuthSubmit() {
+      const name = document.getElementById('auth-name').value;
+      const email = document.getElementById('auth-email').value;
+      const pass = document.getElementById('auth-pass').value;
+
+      if (!email || !pass || (authMode === 'signup' && !name)) {
+        alert('Please fill in all fields');
+        return;
+      }
+
+      const users = JSON.parse(localStorage.getItem('aurora_users') || '[]');
+
+      if (authMode === 'signup') {
+        if (users.find(u => u.email === email)) {
+          alert('User already exists with this email');
+          return;
+        }
+        const newUser = { name, email, pass };
+        users.push(newUser);
+        localStorage.setItem('aurora_users', JSON.stringify(users));
+        loginUser(newUser);
+      } else {
+        const user = users.find(u => u.email === email && u.pass === pass);
+        if (user) {
+          loginUser(user);
+        } else {
+          alert('Invalid email or password');
+        }
+      }
+    }
+
+    function loginUser(user) {
+      localStorage.setItem('aurora_session', JSON.stringify(user));
+      currentUser = user;
+      document.getElementById('auth-view').classList.add('hidden-auth');
+      document.getElementById('user-display-name').textContent = user.name || 'User';
+      
+      // Load user-specific document history
+      const userDocKey = `docHistory_${user.email}`;
+      docHistory = JSON.parse(localStorage.getItem(userDocKey)) || [];
+      
+      renderLibrary();
+      updateDashboard();
+    }
+
+    function logout() {
+      localStorage.removeItem('aurora_session');
+      currentUser = null;
+      document.getElementById('auth-view').classList.remove('hidden-auth');
+      
+      // Reset docHistory and state
+      docHistory = [];
+      renderLibrary();
+      updateDashboard();
+      
+      // Clear forms
+      document.getElementById('auth-name').value = '';
+      document.getElementById('auth-email').value = '';
+      document.getElementById('auth-pass').value = '';
+    }
+
+    // Call checkSession on start
+    window.addEventListener('DOMContentLoaded', checkSession);
+
     // Navigation logic
     const navItems = document.querySelectorAll('.nav-item');
     const views = document.querySelectorAll('.view-section');
@@ -816,7 +968,7 @@
 
     document.getElementById('lib-analyze-btn').addEventListener('click', () => switchView('analyze-view'));
 
-    let docHistory = JSON.parse(localStorage.getItem('docHistory')) || [];
+    let docHistory = [];
 
     const getReportText = (data) => {
       const clausesStr = (data.clauses || []).map(c => '- ' + c).join('\n');
@@ -1501,7 +1653,7 @@
             docHistory.unshift(docEntry);
           });
           
-          localStorage.setItem('docHistory', JSON.stringify(docHistory));
+          localStorage.setItem(`docHistory_${currentUser.email}`, JSON.stringify(docHistory));
           renderLibrary();
           return data;
         } else {

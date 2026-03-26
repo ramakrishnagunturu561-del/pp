@@ -228,9 +228,9 @@ export async function findImageMagickCommand(): Promise<{
   const windowsPaths = [
     "C:\\Program Files\\ImageMagick-7.1.2-Q16-HDRI\\magick.exe",
     "C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI\\magick.exe",
-    "C:\\Program Files\\ImageMagick-7.1.3-Q16-HDRI\\magick.exe"
+    "C:\\Program Files\\ImageMagick-7.1.3-Q16-HDRI\\magick.exe",
   ];
-  if (process.platform === 'win32') {
+  if (process.platform === "win32") {
     for (const p of windowsPaths) {
       if (await isPathExecutable(p)) {
         return { command: p, args: [] };
@@ -239,7 +239,7 @@ export async function findImageMagickCommand(): Promise<{
   }
 
   // ImageMagick v6 uses 'convert' command
-  if (process.platform !== 'win32') {
+  if (process.platform !== "win32") {
     if ((await isCommandAvailable("convert")) || (await isCommandAvailableWindows("convert"))) {
       return { command: "convert", args: [] };
     }
