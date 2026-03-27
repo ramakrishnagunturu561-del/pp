@@ -18,7 +18,7 @@ export async function processDocument(filePath: string) {
   const startTime = Date.now();
 
   if (!parser) {
-    const { LiteParse } = await import('../../../../dist/src/lib.js');
+    const { LiteParse } = await import('../../../../../dist/src/lib.js');
     parser = new LiteParse();
   }
 
