@@ -1,0 +1,125 @@
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import * as dotenv from 'dotenv';
+import * as fs from 'fs/promises';
+
+dotenv.config();
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const model = genAI.getGenerativeModel({ 
+  model: 'gemini-flash-latest',
+  generationConfig: {
+    responseMimeType: 'application/json'
+  }
+});
+
+let parser: any = null;
+
+export async function processDocument(filePath: string) {
+  const startTime = Date.now();
+
+  if (!parser) {
+    const { LiteParse } = await import('../../../../../dist/src/lib.js');
+    parser = new LiteParse();
+  }
+
+  try {
+    // 1. Extract text using LiteParse
+    const parsedData = await parser.parse(filePath);
+    let textContent = parsedData.text;
+    
+    // Heuristics for failed OCR:
+    const alphanumericCount = (textContent.match(/[a-zA-Z0-9]/g) || []).length;
+    const alphanumericRatio = textContent.length > 0 ? alphanumericCount / textContent.length : 0;
+    
+    const isOcrFailed = (!textContent || textContent.trim() === '' || textContent.length < 50 || alphanumericRatio < 0.5);
+
+    const path = await import('path');
+    const fileExt = path.extname(filePath).toLowerCase();
+    const isImage = ['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(fileExt);
+    const docType = isImage ? 'image' : 'document';
+
+    // 2. Classify with Gemini
+    const basePrompt = `You are an expert ${docType} classifier. 
+Classify the provided ${docType} into exactly one of these predefined categories:
+- Identity Proofs (e.g., Aadhaar, PAN, Driving Licence, Passport)
+- Financial Documents (e.g., Bank Statements, Invoices, Receipts, Debit/Credit Cards)
+- Government Certificates (e.g., Income Certificate, Caste Certificate, Domicile)
+- Legal Agreements
+- Compliance Documents
+- Tax Documents
+- Business Registration Documents
+- Presentations / Pitch Decks
+- Academic / Project Proposals
+- Unknown (if it doesn't fit the above)
+
+SPECIAL INSTRUCTIONS FOR DEADLINES:
+- For Debit/Credit Cards, find the "Expiry Date" or "Valid Thru" and set as "due_date".
+- For Income/Caste Certificates, find the "Validity Period" or "Expiry Date" and set as "due_date".
+- If a document has an expiration or renewal date, ALWAYS extract it.
+
+You must return ONLY a JSON response matching this exact structure:
+{
+  "category": "category name",
+  "confidence": <number between 0 and 100>,
+  "summary": "A 2-3 sentence overview of the ${docType} contents",
+  "clauses": ["Key point/clause 1", "Key point/clause 2"],
+  "risks": ["Potential risk or red flag 1", "Potential risk 2 (if any)"],
+  "due_date": "YYYY-MM-DD or null if no deadline/expiry/renewal date found",
+  "reminder_days": <number of days before the due_date to remind the user, e.g. 7 or 14>
+}`;
+
+    
+    let mimeType: string | null = null;
+    if (['.jpg', '.jpeg'].includes(fileExt)) mimeType = 'image/jpeg';
+    else if (fileExt === '.png') mimeType = 'image/png';
+    else if (fileExt === '.webp') mimeType = 'image/webp';
+    else if (fileExt === '.pdf') mimeType = 'application/pdf';
+
+    const promptWithText = basePrompt + `\n\nExtracted Text (may be garbled if OCR quality is poor):\n---\n${textContent.substring(0, 15000)}\n---`;
+
+    let result;
+    if (mimeType) {
+      // Gemini 2.5 supports native vision for these formats, so we ALWAYS pass the file natively
+      // to let Gemini's internal multimodal engine override any bad local OCR!
+      console.log(`Passing ${mimeType} file natively to Gemini alongside text.`);
+      const fileData = await fs.readFile(filePath);
+      const filePart = {
+        inlineData: {
+          data: fileData.toString('base64'),
+          mimeType
+        }
+      };
+      
+      const modifiedPrompt = promptWithText + "\n\nPlease heavily rely on the visually attached document if the extracted text above seems garbled or incoherent.";
+      result = await model.generateContent([modifiedPrompt, filePart]);
+    } else {
+      // Unrecognized format for Native Vision, pray the extracted text is good enough
+      console.log("Passing only extracted text to Gemini");
+      result = await model.generateContent(promptWithText);
+    }
+    
+    const responseText = result.response.text();
+    
+    let classification;
+    try {
+        classification = JSON.parse(responseText);
+    } catch(e) {
+        classification = { category: 'Unknown', confidence: 0, summary: "Could not parse document correctly.", clauses: [], risks: [] };
+    }
+
+    const processingTime = ((Date.now() - startTime) / 1000).toFixed(2);
+
+    return {
+      documentType: classification.category,
+      confidenceScore: `${classification.confidence}%`,
+      processingTime: `${processingTime} sec`,
+      summary: classification.summary || "No summary available.",
+      clauses: classification.clauses || [],
+      risks: classification.risks || [],
+      due_date: classification.due_date || null,
+      reminder_days: classification.reminder_days || 7
+    };
+  } catch (error) {
+    throw error;
+  }
+}
