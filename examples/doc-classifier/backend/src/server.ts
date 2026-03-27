@@ -19,9 +19,17 @@ dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/aurora';
 
+console.log('--- Database Config ---');
+console.log('MONGODB_URI defined:', !!process.env.MONGODB_URI);
+console.log('Connecting to:', MONGODB_URI.replace(/\/\/.*@/, '//****@')); // Mask password if any
+console.log('-----------------------');
+
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB (Compass ready!)'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .then(() => console.log('✅ Connected to MongoDB Successfully! (Data will now persist)'))
+  .catch(err => {
+    console.error('❌ MongoDB Connection ERROR:', err.message);
+    console.log('Is MongoDB running? Try opening MongoDB Compass and connecting to 127.0.0.1:27017');
+  });
 
 const server = Fastify({ logger: true });
 
