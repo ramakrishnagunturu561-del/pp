@@ -3,6 +3,8 @@ import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import { classifyRoute } from './routes/classify.js';
 import { chatRoute } from './routes/chat.js';
+import { downloadRoute } from './routes/download.js';
+import { deleteRoute } from './routes/delete.js';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -35,6 +37,8 @@ server.register(classifyRoute);
 server.register(chatRoute);
 server.register(globalChatRoute);
 server.register(notifyRoute);
+server.register(downloadRoute);
+server.register(deleteRoute);
 
 const start = async () => {
   try {

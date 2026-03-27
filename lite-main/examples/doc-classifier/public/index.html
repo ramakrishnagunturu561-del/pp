@@ -6,6 +6,7 @@
   <title>Aurora.ai Legal Document Intelligence</title>
   <link rel="stylesheet" href="/public/style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
   <!-- Auth View (Hidden by default or shown if not logged in) -->
@@ -108,17 +109,26 @@
       </div>
 
       <div class="sidebar-footer">
-        <div class="assistant-card" style="margin-bottom: 12px;">
+        <div class="user-panel" style="margin-bottom: 12px; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid var(--border-light);">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <div class="assistant-avatar" style="width: 32px; height: 32px; font-size: 0.8rem;">U</div>
+            <div class="user-meta">
+              <h5 id="user-display-name-sidebar" style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin: 0;">User</h5>
+              <span style="font-size: 0.7rem; color: var(--text-light); opacity: 0.8;">Standard Account</span>
+            </div>
+          </div>
+          <button class="logout-btn" style="width: 100%; justify-content: center;" onclick="logout()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            Logout
+          </button>
+        </div>
+        <div class="assistant-card">
           <div class="assistant-avatar">AI</div>
           <div class="assistant-info">
-            <h5 id="user-display-name">Legal AI Assistant</h5>
-            <span>Ready to analyze documents</span>
+            <h5 style="margin: 0; font-size: 0.85rem;">Legal AI Assistant</h5>
+            <span style="font-size: 0.75rem;">Verified Protection</span>
           </div>
         </div>
-        <button class="btn outline" style="width: 100%; border-color: rgba(238, 93, 80, 0.3); color: var(--accent-red); padding: 10px;" onclick="logout()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; margin-right: 8px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-          Logout
-        </button>
       </div>
     </aside>
 
@@ -133,15 +143,19 @@
           <h1 class="hero-title">Legal Intelligence</h1>
           <p class="hero-subtitle">Transform complex legal documents into plain language insights with AI-<br>powered analysis</p>
           
-          <div class="analyze-actions">
+          <div class="analyze-actions" style="display: flex; align-items: center; gap: 20px;">
             <button class="btn btn-primary" id="analyze-main-btn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
               Analyze Document
               <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
-            <div class="status-indicator">
-              <span class="dot"></span> AI Ready • Real-time Analysis
-            </div>
+            <button onclick="logout()" class="header-logout-btn" style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); color: white;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              Logout
+            </button>
+            <button class="icon-btn settings-btn" style="color: white; border-color: rgba(255,255,255,0.3);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
           </div>
         </header>
 
@@ -256,6 +270,10 @@
             <h2 class="analyze-title">Document Analysis</h2>
             <p class="analyze-subtitle">Upload and analyze legal documents with AI</p>
           </div>
+          <button onclick="logout()" class="header-logout-btn" style="margin-left: auto;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            Logout
+          </button>
         </header>
 
         <div class="big-dropzone drop-trigger" id="main-droparea">
@@ -300,10 +318,16 @@
             <h2 class="analyze-title">Document Library</h2>
             <p class="analyze-subtitle">Manage and review your analyzed documents</p>
           </div>
-          <button class="btn btn-primary" id="lib-analyze-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-            Analyze New Document
-          </button>
+          <div style="display: flex; gap: 12px; align-items: center; margin-left: auto;">
+            <button onclick="logout()" class="header-logout-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              Logout
+            </button>
+            <button class="btn btn-primary" id="lib-analyze-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+              Analyze New Document
+            </button>
+          </div>
         </header>
 
         <div class="lib-filters">
@@ -403,10 +427,19 @@
             <h1>Upcoming Schedules & Deadlines</h1>
             <p>Track and manage important dates from your analyzed documents.</p>
           </div>
-          <div class="header-actions" style="display: flex; gap: 12px;">
-            <button class="btn outline" id="settings-btn" style="display: flex; align-items: center; gap: 8px;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-              Settings
+          <div class="user-nav-actions" style="display: flex; align-items: center; gap: 15px;">
+            <button onclick="logout()" class="header-logout-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              Logout
+            </button>
+            <button class="icon-btn settings-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+            <button class="icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            </button>
+            <button class="icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </button>
           </div>
         </div>
@@ -619,16 +652,23 @@
   </div>
 
   <script>
-    // Auth State
+    // Auth & Data State
     let authMode = 'login';
     let currentUser = null;
+    let docHistory = [];
 
     function checkSession() {
       const session = localStorage.getItem('aurora_session');
       if (session) {
         currentUser = JSON.parse(session);
         document.getElementById('auth-view').classList.add('hidden-auth');
-        document.getElementById('user-display-name').textContent = currentUser.name || 'User';
+        
+        // Update UI with user name
+        const name = currentUser.name || 'User';
+        const nameElements = document.querySelectorAll('[id^="user-display-name"]');
+        nameElements.forEach(el => el.textContent = name);
+        const sideName = document.getElementById('user-display-name-sidebar');
+        if (sideName) sideName.textContent = name;
         
         // Load user-specific document history
         const userDocKey = `docHistory_${currentUser.email}`;
@@ -699,7 +739,13 @@
       localStorage.setItem('aurora_session', JSON.stringify(user));
       currentUser = user;
       document.getElementById('auth-view').classList.add('hidden-auth');
-      document.getElementById('user-display-name').textContent = user.name || 'User';
+      
+      // Update UI with user name
+      const name = user.name || 'User';
+      const nameElements = document.querySelectorAll('[id^="user-display-name"]');
+      nameElements.forEach(el => el.textContent = name);
+      const sideName = document.getElementById('user-display-name-sidebar');
+      if (sideName) sideName.textContent = name;
       
       // Load user-specific document history
       const userDocKey = `docHistory_${user.email}`;
@@ -725,8 +771,11 @@
       document.getElementById('auth-pass').value = '';
     }
 
-    // Call checkSession on start
-    window.addEventListener('DOMContentLoaded', checkSession);
+    function updateDashboard() {
+      renderLibrary();
+      updateDashboardStats();
+      updateReminders();
+    }
 
     // Navigation logic
     const navItems = document.querySelectorAll('.nav-item');
@@ -736,7 +785,11 @@
     function clearHistory() {
       if (confirm('Are you sure you want to clear all document history? This cannot be undone.')) {
         docHistory = [];
-        localStorage.removeItem('docHistory');
+        if (currentUser && currentUser.email) {
+          localStorage.removeItem(`docHistory_${currentUser.email}`);
+        } else {
+          localStorage.removeItem('docHistory');
+        }
         renderLibrary();
         updateDashboard();
         switchView('dashboard-view');
@@ -783,9 +836,11 @@
       alert('Settings saved!');
     });
 
-    document.getElementById('settings-btn').addEventListener('click', () => {
-      document.getElementById('user-email-input').value = userEmail;
-      document.getElementById('settings-modal').classList.remove('hidden');
+    document.querySelectorAll('.settings-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('user-email-input').value = userEmail;
+        document.getElementById('settings-modal').classList.remove('hidden');
+      });
     });
 
     document.getElementById('res-notify-btn')?.addEventListener('click', async () => {
@@ -968,7 +1023,6 @@
 
     document.getElementById('lib-analyze-btn').addEventListener('click', () => switchView('analyze-view'));
 
-    let docHistory = [];
 
     const getReportText = (data) => {
       const clausesStr = (data.clauses || []).map(c => '- ' + c).join('\n');
@@ -1076,8 +1130,32 @@
         Object.keys(groups).sort().forEach(category => {
           const folderHeader = document.createElement('div');
           folderHeader.className = 'folder-header';
-          folderHeader.style.cssText = "grid-column: 1 / -1; margin: 24px 0 12px; display: flex; align-items: center; gap: 10px; color: var(--text-main); font-weight: 700; font-size: 1.1rem; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;";
-          folderHeader.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px; color:var(--primary);"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> 📁 ${category} (${groups[category].length})`;
+          folderHeader.style.cssText = "grid-column: 1 / -1; margin: 24px 0 12px; display: flex; align-items: center; justify-content: space-between; color: var(--text-main); font-weight: 700; font-size: 1.1rem; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;";
+          
+          const headerLeft = document.createElement('div');
+          headerLeft.style.cssText = "display: flex; align-items: center; gap: 10px;";
+          headerLeft.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px; color:var(--primary);"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> 📁 ${category} (${groups[category].length})`;
+          
+          const actionsContainer = document.createElement('div');
+          actionsContainer.style.cssText = "display: flex; gap: 8px; align-items: center;";
+          
+          const downloadBtn = document.createElement('button');
+          downloadBtn.className = 'btn btn-small outline';
+          downloadBtn.style.cssText = "font-size: 0.72rem; padding: 4px 10px; height: auto; border-radius: 6px; display: flex; align-items: center; gap: 6px;";
+          downloadBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Analysis ZIP`;
+          downloadBtn.onclick = (e) => downloadGroup(category, groups[category], e.currentTarget);
+          
+          const mediaBtn = document.createElement('button');
+          mediaBtn.className = 'btn btn-small outline';
+          mediaBtn.style.cssText = "font-size: 0.72rem; padding: 4px 10px; height: auto; border-radius: 6px; display: flex; align-items: center; gap: 6px; border-color: var(--primary); color: var(--primary);";
+          mediaBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Media ZIP`;
+          mediaBtn.onclick = (e) => downloadMediaGroup(category, groups[category], e.currentTarget);
+
+          actionsContainer.appendChild(downloadBtn);
+          actionsContainer.appendChild(mediaBtn);
+          
+          folderHeader.appendChild(headerLeft);
+          folderHeader.appendChild(actionsContainer);
           libGrid.appendChild(folderHeader);
 
           groups[category].forEach(({ doc, idx }) => {
@@ -1107,8 +1185,8 @@
               </div>
               <div class="lib-actions">
                 <button class="lib-btn-view" onclick="viewDocument(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> View Results</button>
-                <button class="lib-btn-download" onclick="downloadDocumentIdx(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></button>
-                ${doc.due_date && doc.due_date !== 'null' ? `<a href="${buildGCalURL(doc.title, doc.due_date, doc.summary)}" target="_blank" class="lib-btn-gcal" title="Add to Google Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></a>` : ''}
+                <button class="lib-btn-download" onclick="downloadDocumentIdx(${idx})" title="Download Analysis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></button>
+                <button class="lib-btn-delete" onclick="deleteDocument(${idx})" style="background:rgba(211,47,47,0.1); color:#d32f2f; border:none; padding:8px; border-radius:8px; cursor:pointer;" title="Delete Document"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
               </div>
             `;
             libGrid.appendChild(card);
@@ -1293,6 +1371,105 @@
       if (!data) return;
       const text = getReportText(data);
       triggerDownload(text, data.title);
+    }
+    
+    async function deleteDocument(idx) {
+      const doc = docHistory[idx];
+      if (!doc) return;
+
+      if (!confirm(`Are you sure you want to delete "${doc.title}"?`)) return;
+
+      try {
+        // 1. Delete from Server
+        const response = await fetch('/api/delete-file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            category: doc.documentType || 'Unknown',
+            filename: doc.title
+          })
+        });
+        
+        const data = await response.json();
+        console.log("Delete call result:", data);
+
+        // 2. Delete from local state & storage
+        docHistory.splice(idx, 1);
+        if (currentUser && currentUser.email) {
+          localStorage.setItem(`docHistory_${currentUser.email}`, JSON.stringify(docHistory));
+        }
+
+        // 3. Refresh UI
+        renderLibrary();
+        updateDashboard();
+        
+      } catch (err) {
+        console.error("Deletion failed:", err);
+        alert("Failed to delete document. It might have already been removed from the server.");
+        
+        // Even if server delete fails, web should allow removing it from the local list
+        docHistory.splice(idx, 1);
+        if (currentUser && currentUser.email) {
+          localStorage.setItem(`docHistory_${currentUser.email}`, JSON.stringify(docHistory));
+        }
+        renderLibrary();
+        updateDashboard();
+      }
+    }
+
+    async function downloadMediaGroup(category, items, btn) {
+      if (!items || items.length === 0) {
+        alert("No items found in this category group.");
+        return;
+      }
+      
+      console.log(`Triggering server-side ZIP for category: "${category}"`);
+      
+      // We directly trigger the download from the server
+      const url = `/api/download-media/${encodeURIComponent(category)}`;
+      window.location.href = url;
+      
+      // Add a small delay then restore button (or just don't disable it since it's a direct link)
+      const originalText = btn.innerHTML;
+      btn.innerHTML = "Downloading...";
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+      }, 2000);
+    }
+
+    async function downloadGroup(category, items, btn) {
+      if (!items || items.length === 0) return;
+      
+      const originalText = btn.innerHTML;
+      btn.innerHTML = "Preparing ZIP...";
+      btn.disabled = true;
+
+      const zip = new JSZip();
+      const folder = zip.folder(category);
+      
+      items.forEach(({ doc }) => {
+        const content = getReportText(doc);
+        const fileName = doc.title.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.txt';
+        folder.file(fileName, content);
+      });
+      
+      try {
+        const content = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(content);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Aurora_${category}_Analysis_${Date.now()}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error("ZIP Generation Error:", err);
+        alert("Failed to generate Analysis ZIP archive.");
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
     }
     
     function triggerDownload(text, filename) {
@@ -1739,6 +1916,9 @@
         chatMessages.appendChild(errMsg);
       }
     }
+
+    // Initialize session after all functions are defined
+    window.addEventListener('DOMContentLoaded', checkSession);
   </script>
 </body>
 </html>

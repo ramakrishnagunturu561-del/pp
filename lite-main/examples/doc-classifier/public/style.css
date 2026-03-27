@@ -2050,3 +2050,65 @@ body {
 .hidden-auth {
   display: none !important;
 }
+
+/* User Info & Logout */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
+  margin-bottom: 20px;
+}
+
+#user-display-name {
+  font-weight: 700;
+  color: var(--text-main);
+  font-size: 0.9rem;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 82, 82, 0.1);
+  color: #ff5252;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  background: #ff5252;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.header-logout-btn {
+  background: white;
+  border: 1px solid var(--border-light);
+  color: var(--text-light);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.header-logout-btn:hover {
+  background: #fff5f5;
+  color: #ff5252;
+  border-color: #ffc1c1;
+  transform: translateY(-1px);
+}
