@@ -21,7 +21,7 @@ server.register(multipart);
 
 // Serve static frontend files
 server.register(fastifyStatic, {
-  root: path.join(__dirname, '../public'),
+  root: path.join(__dirname, '../../frontend/public'),
   prefix: '/public/',
 });
 

@@ -6,7 +6,7 @@ import AdmZip from 'adm-zip';
 export async function downloadRoute(fastify: FastifyInstance) {
   fastify.get('/api/download-media/:category', async (req: any, reply: FastifyReply) => {
     const { category } = req.params;
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', category);
+    const uploadsDir = path.join(process.cwd(), 'frontend', 'public', 'uploads', category);
 
     if (!fs.existsSync(uploadsDir)) {
       return reply.code(404).send({ error: 'Category folder not found' });

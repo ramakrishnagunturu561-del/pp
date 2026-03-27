@@ -10,7 +10,7 @@ export async function deleteRoute(fastify: FastifyInstance) {
       return reply.code(400).send({ error: 'Missing category or filename' });
     }
 
-    const filePath = path.join(process.cwd(), 'public', 'uploads', category, filename);
+    const filePath = path.join(process.cwd(), 'frontend', 'public', 'uploads', category, filename);
 
     try {
       if (fs.existsSync(filePath)) {

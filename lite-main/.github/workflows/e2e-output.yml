@@ -51,7 +51,9 @@ jobs:
 
       - name: Compare outputs
         id: compare
-        run: ./scripts/compare-outputs.sh expected-dataset
+        run: |
+          chmod +x scripts/compare-outputs.sh
+          ./scripts/compare-outputs.sh expected-dataset
 
       - name: Upload comparison results
         if: always()
