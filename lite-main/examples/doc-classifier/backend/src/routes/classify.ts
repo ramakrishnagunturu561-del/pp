@@ -17,10 +17,14 @@ export async function classifyRoute(fastify: FastifyInstance) {
       return reply.code(400).send({ error: 'No file uploaded' });
     }
 
-    const tempFilePath = path.join(os.tmpdir(), `upload-${Date.now()}-${data.filename}`);
+    const tempFilePath = path.join(os.tmpdir(), `upload-${Date.now()}-${data.filename.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`);
+    logToProcess(`Temp file path designated: ${tempFilePath}`);
 
     try {
       await pump(data.file, fs.createWriteStream(tempFilePath));
+      
+      const stat = fs.statSync(tempFilePath);
+      logToProcess(`File saved to temp. Size: ${stat.size} bytes`);
 
       const fileExt = path.extname(data.filename).toLowerCase();
 
@@ -37,8 +41,8 @@ export async function classifyRoute(fastify: FastifyInstance) {
         logToProcess(`ZIP extracted: Found ${files.length} potential files to process.`);
         
         for (let i = 0; i < files.length; i++) {
-          // Increase delay to 10 seconds to be much safer with Gemini Free Tier (15 RPM)
-          if (i > 0) await new Promise(resolve => setTimeout(resolve, 10000));
+          // Reduce delay to 1 second — much faster processing. We rely on the 429 retry logic if we hit burst limits.
+          if (i > 0) await new Promise(resolve => setTimeout(resolve, 1000));
           
           const fullPath = files[i];
           if (fullPath === undefined) continue;
@@ -58,9 +62,12 @@ export async function classifyRoute(fastify: FastifyInstance) {
                 const uploadsDir = path.join(process.cwd(), 'frontend', 'public', 'uploads', category);
                 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
                 
-                const finalPath = path.join(uploadsDir, path.basename(fullPath));
+                const uniqueFilename = `${Date.now()}-${path.basename(fullPath).replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
+                const finalPath = path.join(uploadsDir, uniqueFilename);
                 await fs.promises.rename(fullPath, finalPath);
                 
+                result.filename = uniqueFilename;
+                result.originalFilename = path.basename(fullPath);
                 results.push(result);
                 break; // Success, exit retry loop
               } else {
@@ -108,8 +115,12 @@ export async function classifyRoute(fastify: FastifyInstance) {
           fs.mkdirSync(uploadsDir, { recursive: true });
         }
 
-        const finalPath = path.join(uploadsDir, data.filename);
+        const uniqueFilename = `${Date.now()}-${data.filename.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
+        const finalPath = path.join(uploadsDir, uniqueFilename);
         await fs.promises.rename(tempFilePath, finalPath);
+        
+        result.filename = uniqueFilename;
+        result.originalFilename = data.filename;
         
         return reply.send(result);
       }
